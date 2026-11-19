@@ -1,0 +1,65 @@
+name: Checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  host:
+    name: Receiver, storage and protocol
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Test receiver and persistent analysis
+        run: python -m unittest test_observatory test_portable -q
+      - name: Test native TI protocol parser
+        run: |
+          c++ -std=c++17 -Ifirmware-native/include firmware-native/test/protocol.cpp -o /tmp/survey-protocol-test
+          /tmp/survey-protocol-test
+      - name: Check dashboard JavaScript syntax
+        run: node --check dashboard/app.js
+
+  firmware:
+    name: Build ESP32 firmware without credentials
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install PlatformIO
+        run: python -m pip install platformio==6.2.0
+      - name: Generate build-only configuration
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          values = {
+              "DEVICE_ID": "ci-device",
+              "RECEIVER_URL": "http://192.0.2.1:8767",
+              "INGEST_TOKEN": "ci-placeholder-not-a-deployment-token",
+              "PROV_NAME": "PROV_CI",
+              "PROV_POP": "ci-placeholder",
+          }
+          Path("firmware-native/include/device_secrets.h").write_text(
+              "#pragma once\n" + "".join(
+                  f"static const char *{key} = {json.dumps(value)};\n"
+                  for key, value in values.items()
+              )
+          )
+          PY
+      - name: Build firmware
+        run: pio run -d firmware-native

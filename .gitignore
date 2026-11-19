@@ -1,0 +1,59 @@
+# Local environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.DS_Store
+.idea/
+.vscode/
+
+# Household captures, exports, runtime state, logs and private review artifacts
+/data/
+/private/
+/local/
+/release-review/
+*.log
+*.pid
+*.sqlite*
+*.db
+*.db-*
+*.jsonl
+*.pcap
+*.pcapng
+*.csv
+*.xlsx
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+
+# Credentials, native build products and firmware images (may embed secrets)
+.env
+.env.*
+!.env.example
+**/device_secrets.h
+**/device.json
+**/portable-auth.json
+**/portable-device.json
+**/provisioning-qr.png
+*.key
+*.pem
+*.p12
+*.bin
+*.elf
+*.map
+*.sha256
+firmware-native/.pio/
+
+# Downloaded vendor radio image: not needed to build; redistribution not reviewed
+firmware/*.hex
+
+# Superseded local prototype and household debugging notes; not release sources
+/deploy_portable.py
+/firmware/main.py
+/firmware/survey_device.py
+/REPORT.md
+
+# Required native partition table is build source, not a household scan
+!/firmware-native/partitions.csv
